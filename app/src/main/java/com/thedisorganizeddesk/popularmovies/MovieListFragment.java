@@ -11,6 +11,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.GridView;
+import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -75,6 +78,16 @@ public class MovieListFragment extends Fragment {
         // onPostExecute displays the results of the AsyncTask.
         @Override
         protected void onPostExecute(String result) {
+            GridView gridview = (GridView) getActivity().findViewById(R.id.movies_list_grid);
+            gridview.setAdapter(new ImageAdapter(getActivity()));
+
+            gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                public void onItemClick(AdapterView<?> parent, View v,
+                                        int position, long id) {
+                    Toast.makeText(getActivity(), "" + position,
+                            Toast.LENGTH_SHORT).show();
+                }
+            });
             return;
         }
 
