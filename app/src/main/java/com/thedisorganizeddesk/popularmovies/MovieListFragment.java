@@ -15,6 +15,10 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,6 +26,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -78,8 +84,22 @@ public class MovieListFragment extends Fragment {
         // onPostExecute displays the results of the AsyncTask.
         @Override
         protected void onPostExecute(String result) {
+            //parse the result into an JSON Object
+            JSONObject movies_list_json;
+            List<String> poster_paths=new ArrayList<String>();
+            try{
+                movies_list_json=new JSONObject(result);
+                JSONArray movies_list_array=movies_list_json.getJSONArray("results");
+                for(int i=0;i<movies_list_array.length();i++){
+                    JSONObject movie = movies_list_array.getJSONObject(i);
+                    poster_paths.add(movie.getString("poster_path"));
+                }
+            }catch(JSONException e){
+                Log.e(LOG_TAG,"Error parsing JSON:",e);
+            }
+
             GridView gridview = (GridView) getActivity().findViewById(R.id.movies_list_grid);
-            gridview.setAdapter(new ImageAdapter(getActivity()));
+            gridview.setAdapter(new ImageAdapter(getActivity(),poster_paths));
 
             gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 public void onItemClick(AdapterView<?> parent, View v,

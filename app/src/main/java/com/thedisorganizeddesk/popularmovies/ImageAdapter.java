@@ -7,11 +7,14 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.BaseAdapter;
 
+import java.util.List;
+
 public class ImageAdapter extends BaseAdapter {
     private Context mContext;
 
-    public ImageAdapter(Context c) {
+    public ImageAdapter(Context c,List<String> poster_paths) {
         mContext = c;
+        //setup the poster paths
     }
 
     public int getCount() {
