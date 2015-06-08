@@ -2,6 +2,7 @@ package com.thedisorganizeddesk.popularmovies;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -10,6 +11,9 @@ import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -29,7 +33,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-
+import android.preference.PreferenceManager;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -38,6 +42,39 @@ public class MovieListFragment extends Fragment {
     private final String LOG_TAG=this.getClass().getSimpleName();
 
     public MovieListFragment() {
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState){
+        super.onCreate(savedInstanceState);
+        // Add this line in order for this fragment to handle menu events.
+        setHasOptionsMenu(true);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu,MenuInflater menuInflater) {
+        menuInflater.inflate(R.menu.menu_movie_list_fragment, menu);
+        super.onCreateOptionsMenu(menu, menuInflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected (MenuItem item){
+        int id = item.getItemId();
+        if(id==R.id.action_refresh){
+            //check if network connection is there, otherwise return error
+            ConnectivityManager connMgr = (ConnectivityManager)
+                    getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+            if (networkInfo != null && networkInfo.isConnected()) {
+                // fetch data
+                new DiscoverMoviesTask().execute();
+            } else {
+                // display error
+
+            }
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -71,13 +108,16 @@ public class MovieListFragment extends Fragment {
             // URL for calling the API is needed
             String baseURL="api.themoviedb.org";
             String apiKey="14e1d20ff72d6609b4526f32a29b8d20";
+            SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            String sort_by=sharedPref.getString(getString(R.string.pref_sort_title), null);
             Uri.Builder builder = new Uri.Builder();
             builder.scheme("http")
                     .authority(baseURL)
                     .appendPath("3")
                     .appendPath("discover")
                     .appendPath("movie")
-                    .appendQueryParameter("api_key", apiKey);
+                    .appendQueryParameter("api_key", apiKey)
+                    .appendQueryParameter("sort_by",sort_by);
             String url=builder.toString();
             //fetch URL data
             String result=downloadUrl(url);

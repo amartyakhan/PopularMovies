@@ -1,5 +1,6 @@
 package com.thedisorganizeddesk.popularmovies;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.ListPreference;
@@ -57,6 +58,4 @@ public class SettingsActivity extends PreferenceActivity implements Preference.O
         }
         return true;
     }
-
-
 }

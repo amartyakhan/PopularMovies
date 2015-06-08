@@ -2,18 +2,20 @@
     <string name="app_name">Popular Movies</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="action_refresh">Refresh</string>
     <string name="title_activity_movie_details">Movie Details</string>
 
 
     <string name="pref_sort_title">Sorting preference</string>
-    <string-array name="pref_sort_entries">
-        <item name="0">By Popularity</item>
-        <item name="1">By Rating</item>
-    </string-array>
     <string-array name="pref_sort_entry_values">
-        <item name="0">By Popularity</item>
-        <item name="1">By Rating</item>
+        <item>popularity.desc</item>
+        <item>vote_average.desc</item>
+        <item>revenue.desc</item>
     </string-array>
-
-    <string name="pref_sort_default_value">By Popularity</string>
+    <string-array name="pref_sort_entries">
+        <item>By Popularity</item>
+        <item>By Rating</item>
+        <item>By Revenue</item>
+    </string-array>
+    <string name="pref_sort_default_value">popularity.desc</string>
 </resources>
