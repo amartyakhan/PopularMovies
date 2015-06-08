@@ -4,6 +4,10 @@ android {
     compileSdkVersion 22
     buildToolsVersion '22.0.1'
 
+    repositories {
+        mavenCentral()
+    }
+
     defaultConfig {
         applicationId "com.thedisorganizeddesk.popularmovies"
         minSdkVersion 15
@@ -22,4 +26,5 @@ android {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.android.support:appcompat-v7:22.2.0'
+    compile 'com.squareup.picasso:picasso:2.5.2'
 }
