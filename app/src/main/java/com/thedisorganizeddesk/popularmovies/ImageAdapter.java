@@ -35,8 +35,19 @@ public class ImageAdapter extends BaseAdapter {
 
     // create a new ImageView for each item referenced by the Adapter
     public View getView(int position, View convertView, ViewGroup parent) {
-        ImageView imageView=new ImageView(mContext);
-        Picasso.with(mContext).load("http://i.imgur.com/DvpvklR.png").into(imageView);
+        ImageView imageView;
+        if (convertView == null) {
+            // if it's not recycled, initialize with new ImageView
+            imageView = new ImageView(mContext);
+        } else {
+            imageView = (ImageView) convertView; //recylcing the same view
+        }
+
+        //setup the poster path URL
+        String basepath="http://image.tmdb.org/t/p/w342/";
+        String relativePath=poster_paths.get(position);
+
+        Picasso.with(mContext).load(basepath+relativePath).resize(200,300).centerCrop().into(imageView);
         return imageView;
     }
 }
