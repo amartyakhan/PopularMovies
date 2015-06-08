@@ -1,6 +1,7 @@
 package com.thedisorganizeddesk.popularmovies;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -63,6 +64,7 @@ public class MovieListFragment extends Fragment {
     // Logged for now by the AsyncTask's onPostExecute method.
     private class DiscoverMoviesTask extends AsyncTask<Void, Void, String> {
         private final String LOG_TAG=this.getClass().getSimpleName();
+        private final String EXTRA_MESSAGE="MovieDetails";
         @Override
         protected String doInBackground(Void... params) {
 
@@ -83,13 +85,14 @@ public class MovieListFragment extends Fragment {
         }
         // onPostExecute displays the results of the AsyncTask.
         @Override
-        protected void onPostExecute(String result) {
+        protected void onPostExecute(final String result) {
             //parse the result into an JSON Object
-            JSONObject movies_list_json;
+            final JSONObject movies_list_json;
             List<String> poster_paths=new ArrayList<String>();
+            JSONArray movies_list_array=new JSONArray();
             try{
                 movies_list_json=new JSONObject(result);
-                JSONArray movies_list_array=movies_list_json.getJSONArray("results");
+                movies_list_array=movies_list_json.getJSONArray("results");
                 for(int i=0;i<movies_list_array.length();i++){
                     JSONObject movie = movies_list_array.getJSONObject(i);
                     poster_paths.add(movie.getString("poster_path"));
@@ -104,8 +107,18 @@ public class MovieListFragment extends Fragment {
             gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 public void onItemClick(AdapterView<?> parent, View v,
                                         int position, long id) {
-                    Toast.makeText(getActivity(), "" + position,
-                            Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(getActivity(), "" + position,Toast.LENGTH_SHORT).show();
+
+                    //getting the movie details for the selected item
+                    try {
+                        JSONObject movie_list_json = new JSONObject(result);
+                        JSONObject movieDetails=movie_list_json.getJSONArray("results").getJSONObject(position);
+                        Intent intent = new Intent(getActivity(), MovieDetailsActivity.class);
+                        intent.putExtra(EXTRA_MESSAGE, movieDetails.toString());
+                        startActivity(intent);
+                    }catch (JSONException e){
+                        Log.e(LOG_TAG,"Error parsing JSON: ",e);
+                    }
                 }
             });
             return;
