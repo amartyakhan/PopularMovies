@@ -61,25 +61,13 @@ public class MovieListFragment extends Fragment {
     public boolean onOptionsItemSelected (MenuItem item){
         int id = item.getItemId();
         if(id==R.id.action_refresh){
-            //check if network connection is there, otherwise return error
-            ConnectivityManager connMgr = (ConnectivityManager)
-                    getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-            if (networkInfo != null && networkInfo.isConnected()) {
-                // fetch data
-                new DiscoverMoviesTask().execute();
-            } else {
-                // display error
-
-            }
+            getMovieList();
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    void getMovieList(){
         //check if network connection is there, otherwise return error
         ConnectivityManager connMgr = (ConnectivityManager)
                 getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -89,8 +77,20 @@ public class MovieListFragment extends Fragment {
             new DiscoverMoviesTask().execute();
         } else {
             // display error
-
+            Log.e(LOG_TAG,"No Network connection");
+            Context context = getActivity();
+            CharSequence text = "No Internet connection. :( Not able to fetch movie list";
+            int duration = Toast.LENGTH_SHORT;
+            Toast toast = Toast.makeText(context, text, duration);
+            toast.show();
+            //TODO: Implement a separate view when movies are not accessible
         }
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        getMovieList();
         return inflater.inflate(R.layout.fragment_movie_list, container, false);
     }
 
