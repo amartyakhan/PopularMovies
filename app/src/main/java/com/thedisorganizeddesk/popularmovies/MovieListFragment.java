@@ -148,7 +148,7 @@ public class MovieListFragment extends Fragment {
             String baseURL="api.themoviedb.org";
             String apiKey="14e1d20ff72d6609b4526f32a29b8d20";
             SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-            String sort_by=sharedPref.getString(getString(R.string.pref_sort_title), null);
+            String sort_by=sharedPref.getString(getString(R.string.pref_sort_title), getString(R.string.pref_sort_default_value));
             Uri.Builder builder = new Uri.Builder();
             builder.scheme("http")
                     .authority(baseURL)
