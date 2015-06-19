@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +39,9 @@ import android.preference.PreferenceManager;
  */
 public class MovieListFragment extends Fragment {
     private final String LOG_TAG=this.getClass().getSimpleName();
-
+    ArrayList<String> mPosterPaths;
+    String mMovieDetails;
+    private final String EXTRA_MESSAGE="MovieDetails";
     public MovieListFragment() {
     }
 
@@ -90,8 +91,46 @@ public class MovieListFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        getMovieList();
-        return inflater.inflate(R.layout.fragment_movie_list, container, false);
+        View view=inflater.inflate(R.layout.fragment_movie_list, container, false);
+        if(savedInstanceState==null || !savedInstanceState.containsKey("PosterPaths")){
+            Log.v(LOG_TAG,"Loading movie details from network");
+            getMovieList();
+        }
+        else{
+            Log.v(LOG_TAG,"Loading movie details from savedBundleState");
+            //retrieve the movie list from view
+            mPosterPaths=savedInstanceState.getStringArrayList("PosterPaths");
+            GridView gridview = (GridView) view.findViewById(R.id.movies_list_grid);
+            gridview.setAdapter(new ImageAdapter(getActivity(), mPosterPaths));
+            //retrieve the movie details from view
+            mMovieDetails=savedInstanceState.getString("MovieDetails");
+
+            gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                public void onItemClick(AdapterView<?> parent, View v,
+                                        int position, long id) {
+
+                    //getting the movie details for the selected item
+                    try {
+                        JSONObject movie_list_json = new JSONObject(mMovieDetails);
+                        JSONObject movieDetails=movie_list_json.getJSONArray("results").getJSONObject(position);
+                        Intent intent = new Intent(getActivity(), MovieDetailsActivity.class);
+                        intent.putExtra(EXTRA_MESSAGE, movieDetails.toString());
+                        startActivity(intent);
+                    }catch (JSONException e){
+                        Log.e(LOG_TAG,"Error parsing JSON: ",e);
+                    }
+                }
+            });
+
+        }
+        return view;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putStringArrayList("PosterPaths", mPosterPaths);
+        outState.putString("MovieDetails",mMovieDetails);
+        super.onSaveInstanceState(outState);
     }
 
     // Uses AsyncTask to create a task away from the main UI thread. This task takes a
@@ -101,7 +140,7 @@ public class MovieListFragment extends Fragment {
     // Logged for now by the AsyncTask's onPostExecute method.
     private class DiscoverMoviesTask extends AsyncTask<Void, Void, String> {
         private final String LOG_TAG=this.getClass().getSimpleName();
-        private final String EXTRA_MESSAGE="MovieDetails";
+
         @Override
         protected String doInBackground(Void... params) {
 
@@ -120,29 +159,30 @@ public class MovieListFragment extends Fragment {
                     .appendQueryParameter("sort_by",sort_by);
             String url=builder.toString();
             //fetch URL data
-            String result=downloadUrl(url);
-            return result; //the return value will be used by onPostExecute to update UI
+            mMovieDetails=downloadUrl(url);
+            return mMovieDetails; //the return value will be used by onPostExecute to update UI
         }
         // onPostExecute displays the results of the AsyncTask.
         @Override
         protected void onPostExecute(final String result) {
             //parse the result into an JSON Object
             final JSONObject movies_list_json;
-            List<String> poster_paths=new ArrayList<String>();
+            mPosterPaths =new ArrayList<String>();
             JSONArray movies_list_array=new JSONArray();
             try{
                 movies_list_json=new JSONObject(result);
                 movies_list_array=movies_list_json.getJSONArray("results");
                 for(int i=0;i<movies_list_array.length();i++){
                     JSONObject movie = movies_list_array.getJSONObject(i);
-                    poster_paths.add(movie.getString("poster_path"));
+                    mPosterPaths.add(movie.getString("poster_path"));
                 }
             }catch(JSONException e){
                 Log.e(LOG_TAG,"Error parsing JSON:",e);
             }
 
+
             GridView gridview = (GridView) getActivity().findViewById(R.id.movies_list_grid);
-            gridview.setAdapter(new ImageAdapter(getActivity(),poster_paths));
+            gridview.setAdapter(new ImageAdapter(getActivity(), mPosterPaths));
 
             gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 public void onItemClick(AdapterView<?> parent, View v,
