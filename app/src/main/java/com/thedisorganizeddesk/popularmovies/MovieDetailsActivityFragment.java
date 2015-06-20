@@ -36,6 +36,7 @@ public class MovieDetailsActivityFragment extends Fragment {
         String movieDetails= intent.getStringExtra(EXTRA_MESSAGE);
 
         //Parse the JSON String to a JSONObject
+        //TODO: alternatively use gson to convert the JSON string to a Movies object and fetch properties from there
         try{
             JSONObject movie_detail= new JSONObject(movieDetails);
             TextView title=(TextView) view.findViewById(R.id.movie_title);

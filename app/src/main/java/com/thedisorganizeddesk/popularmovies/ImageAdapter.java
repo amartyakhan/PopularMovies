@@ -46,8 +46,9 @@ public class ImageAdapter extends BaseAdapter {
         //setup the poster path URL
         String basepath="http://image.tmdb.org/t/p/w342/";
         String relativePath=poster_paths.get(position);
-
-        Picasso.with(mContext).load(basepath+relativePath).resize(200,300).centerCrop().into(imageView);
+        if(relativePath!=null){
+            Picasso.with(mContext).load(basepath+relativePath).resize(200,300).centerCrop().into(imageView);
+        }
         //Picasso.with(mContext).load(basepath+relativePath).into(imageView);
         return imageView;
     }
