@@ -66,6 +66,13 @@
                 android:id="@+id/movie_details" />
 
         </LinearLayout>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="View Trailer"
+            android:id="@+id/button_trailer"
+            android:background="@color/youtubeRed"
+            android:textColor="@color/white"/>
 
     </LinearLayout>
     </ScrollView>

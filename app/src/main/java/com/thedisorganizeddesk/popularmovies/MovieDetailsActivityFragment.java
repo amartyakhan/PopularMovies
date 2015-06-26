@@ -1,19 +1,39 @@
 package com.thedisorganizeddesk.popularmovies;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.Button;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.gson.Gson;
 import com.squareup.picasso.Picasso;
+import com.thedisorganizeddesk.popularmovies.api.MovieDbApi;
+import com.thedisorganizeddesk.popularmovies.model.MovieTrailer;
+import com.thedisorganizeddesk.popularmovies.model.MovieTrailers;
+import com.thedisorganizeddesk.popularmovies.model.Movies;
+import com.thedisorganizeddesk.popularmovies.model.Results;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import retrofit.Callback;
+import retrofit.RestAdapter;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
 
 
 /**
@@ -22,6 +42,7 @@ import org.json.JSONObject;
 public class MovieDetailsActivityFragment extends Fragment {
     private final String LOG_TAG=this.getClass().getSimpleName();
     private final String EXTRA_MESSAGE="MovieDetails";
+    private String mTrailerLink;
     public MovieDetailsActivityFragment() {
     }
 
@@ -29,7 +50,7 @@ public class MovieDetailsActivityFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        View view=inflater.inflate(R.layout.fragment_movie_details, container, false);
+        final View view=inflater.inflate(R.layout.fragment_movie_details, container, false);
 
         //get the JSON String from the Intent
         Intent intent = getActivity().getIntent();
@@ -54,6 +75,7 @@ public class MovieDetailsActivityFragment extends Fragment {
             String basepath="https://image.tmdb.org/t/p/w780/";
             String relativePath=movie_detail.getString("backdrop_path");
             //set the image for backdrop
+            //TODO: Handle Picasso Exception
             Picasso.with(getActivity()).load(basepath + relativePath).into(backdrop);
 
             //get the imageView for backdrop
@@ -62,11 +84,62 @@ public class MovieDetailsActivityFragment extends Fragment {
             String basepath_poster="https://image.tmdb.org/t/p/w185/";
             String relativePath_poster=movie_detail.getString("poster_path");
             //set the image for backdrop
+            //TODO: Handle Picasso Exception
             Picasso.with(getActivity()).load(basepath_poster + relativePath_poster).into(poster);
+
+            // set the trailer link for the View trailer button
+            String api="http://api.themoviedb.org/3";
+            String apiKey="14e1d20ff72d6609b4526f32a29b8d20";
+            RestAdapter restAdapter = new RestAdapter.Builder().setLogLevel(RestAdapter.LogLevel.FULL).setEndpoint(api).build();
+            MovieDbApi movieDbApi= restAdapter.create(MovieDbApi.class);
+            movieDbApi.getMovieTrailers(movie_detail.getString("id"), apiKey, new Callback<MovieTrailers>() {
+                @Override
+                public void success(MovieTrailers movieTrailers, Response response) {
+                    List<MovieTrailer> trailers=movieTrailers.getResults();
+                    for(MovieTrailer movieTrailer:trailers){
+                        if(movieTrailer.getSite().compareTo("YouTube")==0){
+                            mTrailerLink=movieTrailer.getKey();
+                            break;
+                        }
+                    }
+                }
+
+                @Override
+                public void failure(RetrofitError error) {
+                    mTrailerLink="";
+                }
+            });
+
+            //setting onclick listener
+            Button b= (Button) view.findViewById(R.id.button_trailer);
+            b.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    playYoutubeVideo();
+                }
+            });
 
         }catch (JSONException e){
             Log.e(LOG_TAG, "Error Parsing JSON: ", e);
         }
+
+
+
         return view;
+    }
+
+    public void playYoutubeVideo(){
+        if(mTrailerLink == "" || mTrailerLink == null){
+            //show some error regarding trailer not available
+            Toast.makeText(getActivity(), "No trailer available", Toast.LENGTH_LONG).show();
+        }
+        else{
+            //get the video link
+            String youtubeLink="https://www.youtube.com/watch?v=";
+            //set intent
+            Intent intent=new Intent(Intent.ACTION_VIEW, Uri.parse(youtubeLink+mTrailerLink));
+            //start intent
+            startActivity(intent);
+        }
     }
 }

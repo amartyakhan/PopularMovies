@@ -7,7 +7,7 @@ public class Results{
    	private boolean adult;
    	private String backdrop_path;
    	private List genre_ids;
-   	private Number id;
+   	private String id;
    	private String original_language;
    	private String original_title;
    	private String overview;
@@ -37,10 +37,10 @@ public class Results{
 	public void setGenre_ids(List genre_ids){
 		this.genre_ids = genre_ids;
 	}
- 	public Number getId(){
+ 	public String getId(){
 		return this.id;
 	}
-	public void setId(Number id){
+	public void setId(String id){
 		this.id = id;
 	}
  	public String getOriginal_language(){
