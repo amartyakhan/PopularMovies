@@ -7,6 +7,7 @@
     <string name="title_activity_movie_details">Movie Details</string>
     <color name="red">#ff0000</color>
     <color name="youtubeRed">#cd201f</color>
+    <color name="reviewBackgroundGrey">#dddddd</color>
     <color name="white">#ffffff</color>
     <string name="pref_sort_title">Sorting preference</string>
     <string-array name="pref_sort_entry_values">

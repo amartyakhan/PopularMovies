@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,12 +14,15 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.squareup.picasso.Picasso;
 import com.thedisorganizeddesk.popularmovies.api.MovieDbApi;
+import com.thedisorganizeddesk.popularmovies.model.MovieReview;
+import com.thedisorganizeddesk.popularmovies.model.MovieReviews;
 import com.thedisorganizeddesk.popularmovies.model.MovieTrailer;
 import com.thedisorganizeddesk.popularmovies.model.MovieTrailers;
 import com.thedisorganizeddesk.popularmovies.model.Movies;
@@ -26,6 +30,7 @@ import com.thedisorganizeddesk.popularmovies.model.Results;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -116,6 +121,33 @@ public class MovieDetailsActivityFragment extends Fragment {
                 @Override
                 public void onClick(View v) {
                     playYoutubeVideo();
+                }
+            });
+
+            //set the movie reviews for the movie details page
+            movieDbApi.getMovieReviews(movie_detail.getString("id"), apiKey, new Callback<MovieReviews>() {
+                @Override
+                public void success(MovieReviews movieReviews, Response response) {
+                    List<MovieReview> movieReviewList = movieReviews.getResults();
+                    LinearLayout ll= (LinearLayout) view.findViewById(R.id.movie_reviews);
+                    for (MovieReview movieReview : movieReviewList) {
+                        TextView movie_review_content= new TextView(view.getContext());
+                        movie_review_content.setGravity(Gravity.LEFT);
+                        movie_review_content.setPadding(10,10,10,10);
+                        movie_review_content.setText(movieReview.getContent());
+                        TextView movie_review_author = new TextView(view.getContext());
+                        movie_review_author.setGravity(Gravity.RIGHT);
+                        movie_review_author.setPadding(10,10,10,10);
+                        movie_review_author.setTextColor(R.color.abc_primary_text_material_dark);
+                        movie_review_author.setText("- Reviewed by: "+movieReview.getAuthor());
+                        ll.addView(movie_review_content);
+                        ll.addView(movie_review_author);
+                    }
+                }
+
+                @Override
+                public void failure(RetrofitError error) {
+
                 }
             });
 

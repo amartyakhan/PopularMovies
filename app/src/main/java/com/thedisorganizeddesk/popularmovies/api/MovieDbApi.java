@@ -1,5 +1,6 @@
 package com.thedisorganizeddesk.popularmovies.api;
 
+import com.thedisorganizeddesk.popularmovies.model.MovieReviews;
 import com.thedisorganizeddesk.popularmovies.model.MovieTrailers;
 import com.thedisorganizeddesk.popularmovies.model.Movies;
 import com.thedisorganizeddesk.popularmovies.model.Results;
@@ -17,4 +18,7 @@ public interface MovieDbApi {
 
     @GET("/movie/{id}/videos")
     public void getMovieTrailers(@Path("id") String id,@Query("api_key") String api_key, Callback<MovieTrailers> cb);
+
+    @GET("/movie/{id}/reviews")
+    public void getMovieReviews(@Path("id") String id,@Query("api_key") String api_key, Callback<MovieReviews> cb);
 }
