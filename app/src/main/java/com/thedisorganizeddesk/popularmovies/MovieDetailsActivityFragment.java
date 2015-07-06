@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.GridView;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -47,6 +48,8 @@ import retrofit.client.Response;
 public class MovieDetailsActivityFragment extends Fragment {
     private final String LOG_TAG=this.getClass().getSimpleName();
     private final String EXTRA_MESSAGE="MovieDetails";
+    private String mMovieDetails;
+    private String mMovieId;
     private String mTrailerLink;
     public MovieDetailsActivityFragment() {
     }
@@ -57,14 +60,26 @@ public class MovieDetailsActivityFragment extends Fragment {
 
         final View view=inflater.inflate(R.layout.fragment_movie_details, container, false);
 
+        //get the favorite button
+        ImageButton b= (ImageButton) view.findViewById(R.id.favoriteButton);
+        b.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                addFavorite(v);
+            }
+        });
+
         //get the JSON String from the Intent
         Intent intent = getActivity().getIntent();
-        String movieDetails= intent.getStringExtra(EXTRA_MESSAGE);
+        mMovieDetails= intent.getStringExtra(EXTRA_MESSAGE);
 
         //Parse the JSON String to a JSONObject
         //TODO: alternatively use gson to convert the JSON string to a Movies object and fetch properties from there
         try{
-            JSONObject movie_detail= new JSONObject(movieDetails);
+            JSONObject movie_detail= new JSONObject(mMovieDetails);
+            mMovieId=movie_detail.getString("id");
             TextView title=(TextView) view.findViewById(R.id.movie_title);
             title.setText(movie_detail.getString("original_title"));
             TextView details=(TextView) view.findViewById(R.id.movie_details);
@@ -116,8 +131,8 @@ public class MovieDetailsActivityFragment extends Fragment {
             });
 
             //setting onclick listener
-            Button b= (Button) view.findViewById(R.id.button_trailer);
-            b.setOnClickListener(new View.OnClickListener() {
+            Button bt= (Button) view.findViewById(R.id.button_trailer);
+            bt.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     playYoutubeVideo();
@@ -173,5 +188,11 @@ public class MovieDetailsActivityFragment extends Fragment {
             //start intent
             startActivity(intent);
         }
+    }
+
+    public void addFavorite(View view){
+        //check the current state of the movie as favorite
+        AddMovieTask addMovieTask=new AddMovieTask(getActivity());
+        addMovieTask.execute(mMovieId,mMovieDetails);
     }
 }

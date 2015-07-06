@@ -2,6 +2,9 @@ package com.thedisorganizeddesk.popularmovies;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;
+import android.test.suitebuilder.TestSuiteBuilder;
+
+import junit.framework.Test;
 
 /**
  * <a href="http://d.android.com/tools/testing/testing_android.html">Testing Fundamentals</a>

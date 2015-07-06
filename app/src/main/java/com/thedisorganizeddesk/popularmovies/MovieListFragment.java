@@ -85,11 +85,17 @@ public class MovieListFragment extends Fragment {
                 getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
         if (networkInfo != null && networkInfo.isConnected()) {
+            //getting the sort by preference
+            SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            String sort_by=sharedPref.getString(getString(R.string.pref_sort_title), getString(R.string.pref_sort_default_value));
+
+            if(sort_by.compareTo("favorites")==0){
+                //retrieve favorite movie details from db using content providers
+            }
+
             // fetch data using Retrofit library
             String api="http://api.themoviedb.org/3";
             String apiKey="14e1d20ff72d6609b4526f32a29b8d20";
-            SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
-            String sort_by=sharedPref.getString(getString(R.string.pref_sort_title), getString(R.string.pref_sort_default_value));
             RestAdapter restAdapter = new RestAdapter.Builder().setLogLevel(RestAdapter.LogLevel.FULL).setEndpoint(api).build();
             MovieDbApi movieDbApi= restAdapter.create(MovieDbApi.class);
             movieDbApi.getMovieList(sort_by, apiKey, new Callback<Movies>() {
@@ -132,7 +138,7 @@ public class MovieListFragment extends Fragment {
                 }
             });
         } else {
-            // display toast notification informing conenctivity error
+            // display toast notification informing connectivity error
             Log.e(LOG_TAG,"No Network connection");
             Context context = getActivity();
             CharSequence text = "No Internet connection. :( Not able to fetch movie list";
