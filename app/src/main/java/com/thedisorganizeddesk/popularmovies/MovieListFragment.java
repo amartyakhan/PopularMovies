@@ -118,14 +118,9 @@ public class MovieListFragment extends Fragment implements LoaderManager.LoaderC
                 GridView gridView = (GridView) view.findViewById(R.id.movies_list_grid);
                 mImageCursorAdapter=new ImageCursorAdapter(getActivity(),null,0);
                 gridView.setAdapter(mImageCursorAdapter);
-
-
-
                 gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     public void onItemClick(AdapterView<?> parent, View v,
                                             int position, long id) {
-
-
                         //getting the movie details for the selected item from cursor
                         // CursorAdapter returns a cursor at the correct position for getItem(), or null
                         // if it cannot seek to that position.
@@ -143,50 +138,69 @@ public class MovieListFragment extends Fragment implements LoaderManager.LoaderC
                 getLoaderManager().initLoader(URL_LOADER, null, this);
             }
             else {
-                // fetch data using Retrofit library
-                String api = "http://api.themoviedb.org/3";
-                String apiKey = "14e1d20ff72d6609b4526f32a29b8d20";
-                RestAdapter restAdapter = new RestAdapter.Builder().setLogLevel(RestAdapter.LogLevel.FULL).setEndpoint(api).build();
-                MovieDbApi movieDbApi = restAdapter.create(MovieDbApi.class);
-                movieDbApi.getMovieList(sort_by, apiKey, new Callback<Movies>() {
-                    @Override
-                    public void success(Movies movies, Response response) {
-                        //parsing the movies results
-                        final List<Results> results = movies.getResults();
-
-                        //saving the result in mMovieDetails for future parsing
-                        Gson gson = new Gson();
-                        mMovieDetails = gson.toJson(results);
-                        mPosterPaths = new ArrayList<String>();
-                        for (int i = 0; i < results.size(); i++) {
-                            Results result = ((Results) results.get(i));
-                            mPosterPaths.add(result.getPoster_path());
+                if(mPosterPaths!=null && mMovieDetails!=null){
+                    //retrieve the movie details from the stored member variables
+                    //retrieve the movie list from view
+                    GridView gridview = (GridView) view.findViewById(R.id.movies_list_grid);
+                    gridview.setAdapter(new ImageAdapter(getActivity(), mPosterPaths));
+                    gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                        public void onItemClick(AdapterView<?> parent, View v,
+                                                int position, long id) {
+                            //getting the movie details for the selected item
+                            Gson gson = new Gson();
+                            Intent intent = new Intent(getActivity(), MovieDetailsActivity.class);
+                            final List<Results> results = gson.fromJson(mMovieDetails, List.class);
+                            String dataToPass = gson.toJson(results.get(position));
+                            intent.putExtra(EXTRA_MESSAGE, dataToPass);
+                            startActivity(intent);
                         }
-                        GridView gridview = (GridView) getActivity().findViewById(R.id.movies_list_grid);
-                        gridview.setAdapter(new ImageAdapter(getActivity(), mPosterPaths));
+                    });
+                 }else {
+                    // fetch data using Retrofit library from network
+                    String api = "http://api.themoviedb.org/3";
+                    String apiKey = "14e1d20ff72d6609b4526f32a29b8d20";
+                    RestAdapter restAdapter = new RestAdapter.Builder().setLogLevel(RestAdapter.LogLevel.FULL).setEndpoint(api).build();
+                    MovieDbApi movieDbApi = restAdapter.create(MovieDbApi.class);
+                    movieDbApi.getMovieList(sort_by, apiKey, new Callback<Movies>() {
+                        @Override
+                        public void success(Movies movies, Response response) {
+                            //parsing the movies results
+                            final List<Results> results = movies.getResults();
 
-                        gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                            public void onItemClick(AdapterView<?> parent, View v,
-                                                    int position, long id) {
-                                //getting the movie details for the selected item
-                                Intent intent = new Intent(getActivity(), MovieDetailsActivity.class);
-                                Gson gson = new Gson();
-                                String movieDetails = gson.toJson(results.get(position));
-                                intent.putExtra(EXTRA_MESSAGE, movieDetails);
-                                startActivity(intent);
+                            //saving the result in mMovieDetails for future parsing
+                            Gson gson = new Gson();
+                            mMovieDetails = gson.toJson(results);
+                            mPosterPaths = new ArrayList<String>();
+                            for (int i = 0; i < results.size(); i++) {
+                                Results result = ((Results) results.get(i));
+                                mPosterPaths.add(result.getPoster_path());
                             }
-                        });
-                    }
+                            GridView gridview = (GridView) getActivity().findViewById(R.id.movies_list_grid);
+                            gridview.setAdapter(new ImageAdapter(getActivity(), mPosterPaths));
 
-                    @Override
-                    public void failure(RetrofitError error) {
-                        Context context = getActivity();
-                        CharSequence text = ":( Not able to fetch movie list";
-                        int duration = Toast.LENGTH_SHORT;
-                        Toast toast = Toast.makeText(context, text, duration);
-                        toast.show();
-                    }
-                });
+                            gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                                public void onItemClick(AdapterView<?> parent, View v,
+                                                        int position, long id) {
+                                    //getting the movie details for the selected item
+                                    Intent intent = new Intent(getActivity(), MovieDetailsActivity.class);
+                                    Gson gson = new Gson();
+                                    String movieDetails = gson.toJson(results.get(position));
+                                    intent.putExtra(EXTRA_MESSAGE, movieDetails);
+                                    startActivity(intent);
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void failure(RetrofitError error) {
+                            Context context = getActivity();
+                            CharSequence text = ":( Not able to fetch movie list";
+                            int duration = Toast.LENGTH_SHORT;
+                            Toast toast = Toast.makeText(context, text, duration);
+                            toast.show();
+                        }
+                    });
+                }
             }
         } else {
             // display toast notification informing connectivity error
@@ -208,33 +222,17 @@ public class MovieListFragment extends Fragment implements LoaderManager.LoaderC
         View view = inflater.inflate(R.layout.fragment_movie_list, container, false);
         if(savedInstanceState==null || !savedInstanceState.containsKey("PosterPaths") || !savedInstanceState.containsKey("MovieDetails")){
             Log.v(LOG_TAG,"Loading movie details from network");
-            getMovieList(view);
         }
         else{
             Log.v(LOG_TAG,"Loading movie details from savedBundleState");
             //retrieve the movie list from view
             mPosterPaths=savedInstanceState.getStringArrayList("PosterPaths");
-            GridView gridview = (GridView) view.findViewById(R.id.movies_list_grid);
-            gridview.setAdapter(new ImageAdapter(getActivity(), mPosterPaths));
-            //retrieve the movie details from view
             mMovieDetails=savedInstanceState.getString("MovieDetails");
-
-            gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                public void onItemClick(AdapterView<?> parent, View v,
-                                        int position, long id) {
-                    //getting the movie details for the selected item
-                    Gson gson = new Gson();
-                    Intent intent = new Intent(getActivity(), MovieDetailsActivity.class);
-                    final List<Results> results=gson.fromJson(mMovieDetails, List.class);
-                    String dataToPass=gson.toJson(results.get(position));
-                    intent.putExtra(EXTRA_MESSAGE, dataToPass );
-                    startActivity(intent);
-                }
-            });
-
         }
+        getMovieList(view);
         return view;
     }
+
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
