@@ -60,6 +60,7 @@ public class MovieListFragment extends Fragment implements LoaderManager.LoaderC
     private final String LOG_TAG=this.getClass().getSimpleName();
     ArrayList<String> mPosterPaths;
     String mMovieDetails;
+    String mSavedPreference;
     private final String EXTRA_MESSAGE="MovieDetails";
 
     private ImageCursorAdapter mImageCursorAdapter;
@@ -114,6 +115,7 @@ public class MovieListFragment extends Fragment implements LoaderManager.LoaderC
             String sort_by=sharedPref.getString(getString(R.string.pref_sort_title), getString(R.string.pref_sort_default_value));
 
             if(sort_by.compareTo("My favorites")==0){
+                Log.v(LOG_TAG,"Loading movie details from favorites db");
                 //identifying the view to which we will set the cursor apapter
                 GridView gridView = (GridView) view.findViewById(R.id.movies_list_grid);
                 mImageCursorAdapter=new ImageCursorAdapter(getActivity(),null,0);
@@ -138,7 +140,8 @@ public class MovieListFragment extends Fragment implements LoaderManager.LoaderC
                 getLoaderManager().initLoader(URL_LOADER, null, this);
             }
             else {
-                if(mPosterPaths!=null && mMovieDetails!=null){
+                if(mPosterPaths!=null && mMovieDetails!=null && sort_by.compareTo(mSavedPreference)==0){
+                    Log.v(LOG_TAG,"Loading movie details from bundle");
                     //retrieve the movie details from the stored member variables
                     //retrieve the movie list from view
                     GridView gridview = (GridView) view.findViewById(R.id.movies_list_grid);
@@ -228,6 +231,7 @@ public class MovieListFragment extends Fragment implements LoaderManager.LoaderC
             //retrieve the movie list from view
             mPosterPaths=savedInstanceState.getStringArrayList("PosterPaths");
             mMovieDetails=savedInstanceState.getString("MovieDetails");
+            mSavedPreference=savedInstanceState.getString("SortPreference");
         }
         getMovieList(view);
         return view;
@@ -237,7 +241,9 @@ public class MovieListFragment extends Fragment implements LoaderManager.LoaderC
     @Override
     public void onSaveInstanceState(Bundle outState) {
         outState.putStringArrayList("PosterPaths", mPosterPaths);
-        outState.putString("MovieDetails",mMovieDetails);
+        outState.putString("MovieDetails", mMovieDetails);
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        outState.putString("SortPreference",sharedPref.getString(getString(R.string.pref_sort_title), getString(R.string.pref_sort_default_value)));
         super.onSaveInstanceState(outState);
     }
 
