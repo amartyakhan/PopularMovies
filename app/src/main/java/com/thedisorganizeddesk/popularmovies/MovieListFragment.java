@@ -1,5 +1,8 @@
 package com.thedisorganizeddesk.popularmovies;
 
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.Context;
@@ -52,11 +55,16 @@ import retrofit.client.Response;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class MovieListFragment extends Fragment {
+public class MovieListFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
     private final String LOG_TAG=this.getClass().getSimpleName();
     ArrayList<String> mPosterPaths;
     String mMovieDetails;
     private final String EXTRA_MESSAGE="MovieDetails";
+
+    private ImageCursorAdapter mImageCursorAdapter;
+
+    // Identifies a particular Loader being used in this component
+    private static final int URL_LOADER = 0;
     public MovieListFragment() {
     }
 
@@ -93,49 +101,34 @@ public class MovieListFragment extends Fragment {
             SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
             String sort_by=sharedPref.getString(getString(R.string.pref_sort_title), getString(R.string.pref_sort_default_value));
 
-            if(sort_by.compareTo("favorites")==0){ //change this logic
-                //retrieve favorite movie details from db using content providers
-                final Cursor cursor = getActivity().getContentResolver().query(
-                        MovieContract.MovieEntries.CONTENT_URI,   // The content URI of the words table
-                        null,                       // The columns to return for each row
-                        null,                       // Selection criteria
-                        null,                       // Selection criteria
-                        null);                      // The sort order for the returned rows
-                if(cursor == null){
-                    Toast.makeText(getActivity()," No favorites found",Toast.LENGTH_SHORT).show();
-                }
-                else if(cursor.getCount()<1){
-                    Toast.makeText(getActivity(),"No favorites found",Toast.LENGTH_SHORT).show();
-                }
-                else{
-                    mPosterPaths = new ArrayList<String>();
-                    //reading the data from the cursor
-                    for(int i=0;i<cursor.getCount();i++){
-                        cursor.moveToPosition(i);
-                        String movie_details=cursor.getString(2);
-                        try {
-                            JSONObject movie_details_json = new JSONObject(movie_details);
-                            mPosterPaths.add(movie_details_json.getString("poster_path"));
-                        }catch(Exception e){
+            if(sort_by.compareTo("My favorites")==0){
+                //identifying the view to which we will set the cursor apapter
+                GridView gridView = (GridView) view.findViewById(R.id.movies_list_grid);
+                mImageCursorAdapter=new ImageCursorAdapter(getActivity(),null,0);
+                gridView.setAdapter(mImageCursorAdapter);
 
-                        }
+
+
+                gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    public void onItemClick(AdapterView<?> parent, View v,
+                                            int position, long id) {
+
+
+                        //getting the movie details for the selected item from cursor
+                        // CursorAdapter returns a cursor at the correct position for getItem(), or null
+                        // if it cannot seek to that position.
+                        Cursor cursor = (Cursor) parent.getItemAtPosition(position);
+                        Intent intent = new Intent(getActivity(), MovieDetailsActivity.class);
+                        String movieDetails = cursor.getString(2);
+                        intent.putExtra(EXTRA_MESSAGE, movieDetails);
+                        startActivity(intent);
                     }
-                    GridView gridview = (GridView) view.findViewById(R.id.movies_list_grid);
-                    gridview.setAdapter(new ImageAdapter(getActivity(), mPosterPaths));
-
-                    gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                        public void onItemClick(AdapterView<?> parent, View v,
-                                                int position, long id) {
-                            //getting the movie details for the selected item
-                            Intent intent = new Intent(getActivity(), MovieDetailsActivity.class);
-                            cursor.moveToPosition(position);
-                            String movieDetails = cursor.getString(2);
-                            intent.putExtra(EXTRA_MESSAGE, movieDetails);
-                            startActivity(intent);
-                        }
-                    });
-                }
-
+                });
+                /*
+                 * Initializes the CursorLoader. The URL_LOADER value is eventually passed
+                 * to onCreateLoader().
+                 */
+                getLoaderManager().initLoader(URL_LOADER, null, this);
             }
             else {
                 // fetch data using Retrofit library
@@ -195,10 +188,12 @@ public class MovieListFragment extends Fragment {
         }
     }
 
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view=inflater.inflate(R.layout.fragment_movie_list, container, false);
+
+        View view = inflater.inflate(R.layout.fragment_movie_list, container, false);
         if(savedInstanceState==null || !savedInstanceState.containsKey("PosterPaths") || !savedInstanceState.containsKey("MovieDetails")){
             Log.v(LOG_TAG,"Loading movie details from network");
             getMovieList(view);
@@ -234,5 +229,43 @@ public class MovieListFragment extends Fragment {
         outState.putStringArrayList("PosterPaths", mPosterPaths);
         outState.putString("MovieDetails",mMovieDetails);
         super.onSaveInstanceState(outState);
+    }
+
+    /*
+  * Callback that's invoked when the system has initialized the Loader and
+  * is ready to start the query. This usually happens when initLoader() is
+  * called. The loaderID argument contains the ID value passed to the
+  * initLoader() call.
+  */
+    @Override
+    public Loader<Cursor> onCreateLoader(int loaderID, Bundle bundle)
+    {
+    /*
+     * Takes action based on the ID of the Loader that's being created
+     */
+        switch (loaderID) {
+            case URL_LOADER:
+                // Returns a new CursorLoader
+                return new CursorLoader(
+                        getActivity(),   // Parent activity context
+                        MovieContract.MovieEntries.CONTENT_URI,        // Table to query
+                        null,     // Projection to return
+                        null,            // No selection clause
+                        null,            // No selection arguments
+                        null             // Default sort order
+                );
+            default:
+                // An invalid id was passed in
+                return null;
+        }
+    }
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        mImageCursorAdapter.swapCursor(data);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        mImageCursorAdapter.swapCursor(null);
     }
 }
