@@ -105,11 +105,6 @@ public class MovieListFragment extends Fragment implements LoaderManager.LoaderC
     }
 
     void getMovieList(View view){
-        //check if network connection is there, otherwise return error
-        ConnectivityManager connMgr = (ConnectivityManager)
-                getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-        if (networkInfo != null && networkInfo.isConnected()) {
             //getting the sort by preference
             SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getActivity());
             String sort_by=sharedPref.getString(getString(R.string.pref_sort_title), getString(R.string.pref_sort_default_value));
@@ -140,7 +135,7 @@ public class MovieListFragment extends Fragment implements LoaderManager.LoaderC
                 getLoaderManager().initLoader(URL_LOADER, null, this);
             }
             else {
-                if(mPosterPaths!=null && mMovieDetails!=null && sort_by.compareTo(mSavedPreference)==0){
+                if(mPosterPaths!=null && mMovieDetails!=null && !(mSavedPreference==null || sort_by.compareTo(mSavedPreference)!=0)){
                     Log.v(LOG_TAG,"Loading movie details from bundle");
                     //retrieve the movie details from the stored member variables
                     //retrieve the movie list from view
@@ -159,62 +154,67 @@ public class MovieListFragment extends Fragment implements LoaderManager.LoaderC
                         }
                     });
                  }else {
-                    // fetch data using Retrofit library from network
-                    String api = "http://api.themoviedb.org/3";
-                    String apiKey = "14e1d20ff72d6609b4526f32a29b8d20";
-                    RestAdapter restAdapter = new RestAdapter.Builder().setLogLevel(RestAdapter.LogLevel.FULL).setEndpoint(api).build();
-                    MovieDbApi movieDbApi = restAdapter.create(MovieDbApi.class);
-                    movieDbApi.getMovieList(sort_by, apiKey, new Callback<Movies>() {
-                        @Override
-                        public void success(Movies movies, Response response) {
-                            //parsing the movies results
-                            final List<Results> results = movies.getResults();
+                    //check if network connection is there, otherwise return error
+                    ConnectivityManager connMgr = (ConnectivityManager)
+                            getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+                    NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+                    if (networkInfo != null && networkInfo.isConnected()) {
+                        // fetch data using Retrofit library from network
+                        String api = "http://api.themoviedb.org/3";
+                        String apiKey = "14e1d20ff72d6609b4526f32a29b8d20";
+                        RestAdapter restAdapter = new RestAdapter.Builder().setLogLevel(RestAdapter.LogLevel.FULL).setEndpoint(api).build();
+                        MovieDbApi movieDbApi = restAdapter.create(MovieDbApi.class);
+                        movieDbApi.getMovieList(sort_by, apiKey, new Callback<Movies>() {
+                            @Override
+                            public void success(Movies movies, Response response) {
+                                //parsing the movies results
+                                final List<Results> results = movies.getResults();
 
-                            //saving the result in mMovieDetails for future parsing
-                            Gson gson = new Gson();
-                            mMovieDetails = gson.toJson(results);
-                            mPosterPaths = new ArrayList<String>();
-                            for (int i = 0; i < results.size(); i++) {
-                                Results result = ((Results) results.get(i));
-                                mPosterPaths.add(result.getPoster_path());
-                            }
-                            GridView gridview = (GridView) getActivity().findViewById(R.id.movies_list_grid);
-                            gridview.setAdapter(new ImageAdapter(getActivity(), mPosterPaths));
-
-                            gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                                public void onItemClick(AdapterView<?> parent, View v,
-                                                        int position, long id) {
-                                    //getting the movie details for the selected item
-                                    Intent intent = new Intent(getActivity(), MovieDetailsActivity.class);
-                                    Gson gson = new Gson();
-                                    String movieDetails = gson.toJson(results.get(position));
-                                    intent.putExtra(EXTRA_MESSAGE, movieDetails);
-                                    startActivity(intent);
+                                //saving the result in mMovieDetails for future parsing
+                                Gson gson = new Gson();
+                                mMovieDetails = gson.toJson(results);
+                                mPosterPaths = new ArrayList<String>();
+                                for (int i = 0; i < results.size(); i++) {
+                                    Results result = ((Results) results.get(i));
+                                    mPosterPaths.add(result.getPoster_path());
                                 }
-                            });
-                        }
+                                GridView gridview = (GridView) getActivity().findViewById(R.id.movies_list_grid);
+                                gridview.setAdapter(new ImageAdapter(getActivity(), mPosterPaths));
 
-                        @Override
-                        public void failure(RetrofitError error) {
-                            Context context = getActivity();
-                            CharSequence text = ":( Not able to fetch movie list";
-                            int duration = Toast.LENGTH_SHORT;
-                            Toast toast = Toast.makeText(context, text, duration);
-                            toast.show();
-                        }
-                    });
+                                gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                                    public void onItemClick(AdapterView<?> parent, View v,
+                                                            int position, long id) {
+                                        //getting the movie details for the selected item
+                                        Intent intent = new Intent(getActivity(), MovieDetailsActivity.class);
+                                        Gson gson = new Gson();
+                                        String movieDetails = gson.toJson(results.get(position));
+                                        intent.putExtra(EXTRA_MESSAGE, movieDetails);
+                                        startActivity(intent);
+                                    }
+                                });
+                            }
+
+                            @Override
+                            public void failure(RetrofitError error) {
+                                Context context = getActivity();
+                                CharSequence text = ":( Not able to fetch movie list";
+                                int duration = Toast.LENGTH_SHORT;
+                                Toast toast = Toast.makeText(context, text, duration);
+                                toast.show();
+                            }
+                        });
+                    } else {
+                        // display toast notification informing connectivity error
+                        Log.e(LOG_TAG,"No Network connection");
+                        Context context = getActivity();
+                        CharSequence text = "No Internet connection. :( Not able to fetch movie list";
+                        int duration = Toast.LENGTH_SHORT;
+                        Toast toast = Toast.makeText(context, text, duration);
+                        toast.show();
+                        //TODO: Implement a separate view when movies are not accessible
+                    }
                 }
             }
-        } else {
-            // display toast notification informing connectivity error
-            Log.e(LOG_TAG,"No Network connection");
-            Context context = getActivity();
-            CharSequence text = "No Internet connection. :( Not able to fetch movie list";
-            int duration = Toast.LENGTH_SHORT;
-            Toast toast = Toast.makeText(context, text, duration);
-            toast.show();
-            //TODO: Implement a separate view when movies are not accessible
-        }
     }
 
 
