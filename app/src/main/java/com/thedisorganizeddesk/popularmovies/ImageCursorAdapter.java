@@ -33,7 +33,7 @@ public class ImageCursorAdapter extends CursorAdapter{
 
         //read the poster path from the cursor
 
-        String movie_details= cursor.getString(2);
+        String movie_details= cursor.getString(MovieListFragment.COL_MOVIE_DETAILS);
         String poster_path;
         try {
             JSONObject movie_details_json = new JSONObject(movie_details);

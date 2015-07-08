@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.thedisorganizeddesk.popularmovies.data.MovieContract;
 
@@ -14,6 +15,7 @@ public class AddMovieTask extends AsyncTask<String, Void, Long> {
     private final String LOG_TAG = AddMovieTask.class.getSimpleName();
 
     private final Context mContext;
+    private String mToastMessage;
 
     public AddMovieTask(Context context) {
         mContext = context;
@@ -43,6 +45,8 @@ public class AddMovieTask extends AsyncTask<String, Void, Long> {
         if(movieCursor.moveToFirst()){
             int movieIdIndex = movieCursor.getColumnIndex(MovieContract.MovieEntries._ID);
             movie_id=movieCursor.getLong(movieIdIndex);
+            mToastMessage="This movie is already added to your favorites";
+
         }
         else {
             // Otherwise, insert it using the content resolver and the base URI
@@ -58,7 +62,7 @@ public class AddMovieTask extends AsyncTask<String, Void, Long> {
 
             // The resulting URI contains the ID for the row.  Extract the Movie_id from the Uri.
             movie_id = ContentUris.parseId(insertedUri);
-
+            mToastMessage="Added to your favorites";
         }
         movieCursor.close();
         // Wait, that worked?  Yes!
@@ -68,6 +72,7 @@ public class AddMovieTask extends AsyncTask<String, Void, Long> {
     @Override
     protected void onPostExecute(Long aLong) {
         super.onPostExecute(aLong);
+        Toast.makeText(mContext,mToastMessage,Toast.LENGTH_SHORT).show();
         Log.v(LOG_TAG,"Added Movie Row:"+aLong);
     }
 }

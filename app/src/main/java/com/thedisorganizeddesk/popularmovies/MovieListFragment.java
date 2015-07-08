@@ -1,5 +1,6 @@
 package com.thedisorganizeddesk.popularmovies;
 
+import android.graphics.Movie;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -63,6 +64,17 @@ public class MovieListFragment extends Fragment implements LoaderManager.LoaderC
 
     private ImageCursorAdapter mImageCursorAdapter;
 
+    private static final String[] MOVIES_COLUMNS={
+            MovieContract.MovieEntries._ID,
+            MovieContract.MovieEntries.COLUMN_NAME_MOVIE_ID,
+            MovieContract.MovieEntries.COLUMN_NAME_MOVIE_DETAILS
+    };
+    // These indices are tied to MOVIES_COLUMNS.  If MOVIES_COLUMNS changes, these
+    // must change
+    static final int COL_ID=0;
+    static final int COL_MOVIE_ID=1;
+    static final int COL_MOVIE_DETAILS=2;
+
     // Identifies a particular Loader being used in this component
     private static final int URL_LOADER = 0;
     public MovieListFragment() {
@@ -119,7 +131,7 @@ public class MovieListFragment extends Fragment implements LoaderManager.LoaderC
                         // if it cannot seek to that position.
                         Cursor cursor = (Cursor) parent.getItemAtPosition(position);
                         Intent intent = new Intent(getActivity(), MovieDetailsActivity.class);
-                        String movieDetails = cursor.getString(2);
+                        String movieDetails = cursor.getString(COL_MOVIE_DETAILS);
                         intent.putExtra(EXTRA_MESSAGE, movieDetails);
                         startActivity(intent);
                     }
@@ -249,7 +261,7 @@ public class MovieListFragment extends Fragment implements LoaderManager.LoaderC
                 return new CursorLoader(
                         getActivity(),   // Parent activity context
                         MovieContract.MovieEntries.CONTENT_URI,        // Table to query
-                        null,     // Projection to return
+                        MOVIES_COLUMNS,     // Projection to return
                         null,            // No selection clause
                         null,            // No selection arguments
                         null             // Default sort order
