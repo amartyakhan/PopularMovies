@@ -83,6 +83,11 @@ public class MovieListFragment extends Fragment implements LoaderManager.LoaderC
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         // Add this line in order for this fragment to handle menu events.
@@ -135,6 +140,7 @@ public class MovieListFragment extends Fragment implements LoaderManager.LoaderC
                 getLoaderManager().initLoader(URL_LOADER, null, this);
             }
             else {
+                // if bundle contains data and sort_preference has not changed then load from bundle
                 if(mPosterPaths!=null && mMovieDetails!=null && !(mSavedPreference==null || sort_by.compareTo(mSavedPreference)!=0)){
                     Log.v(LOG_TAG,"Loading movie details from bundle");
                     //retrieve the movie details from the stored member variables
@@ -216,6 +222,12 @@ public class MovieListFragment extends Fragment implements LoaderManager.LoaderC
             }
     }
 
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        getMovieList(getView());
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
