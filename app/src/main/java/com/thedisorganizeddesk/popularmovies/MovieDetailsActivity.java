@@ -8,11 +8,26 @@ import android.view.View;
 
 
 public class MovieDetailsActivity extends ActionBarActivity {
+    static final String EXTRA_MESSAGE="MovieDetails";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_details);
+        if(savedInstanceState==null){
+            // Create the detail fragment and add it to the activity
+            // using a fragment transaction.
+
+            Bundle arguments = new Bundle();
+            arguments.putString(MovieDetailsActivityFragment.MOVIE_DETAILS, getIntent().getStringExtra(EXTRA_MESSAGE));
+
+            MovieDetailsActivityFragment movieDetailsActivityFragment=new MovieDetailsActivityFragment();
+            movieDetailsActivityFragment.setArguments(arguments);
+
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.movie_detail_container,movieDetailsActivityFragment)
+                    .commit();
+        }
     }
 
 

@@ -61,6 +61,7 @@ public class MovieListFragment extends Fragment implements LoaderManager.LoaderC
     ArrayList<String> mPosterPaths;
     String mMovieDetails;
     String mSavedPreference;
+    String mDualPane;
     private final String EXTRA_MESSAGE="MovieDetails";
 
     private ImageCursorAdapter mImageCursorAdapter;
@@ -122,10 +123,9 @@ public class MovieListFragment extends Fragment implements LoaderManager.LoaderC
                         // CursorAdapter returns a cursor at the correct position for getItem(), or null
                         // if it cannot seek to that position.
                         Cursor cursor = (Cursor) parent.getItemAtPosition(position);
-                        Intent intent = new Intent(getActivity(), MovieDetailsActivity.class);
                         String movieDetails = cursor.getString(COL_MOVIE_DETAILS);
-                        intent.putExtra(EXTRA_MESSAGE, movieDetails);
-                        startActivity(intent);
+                        ((CallbackItemSelection) getActivity())
+                                .onItemSelected(movieDetails);
                     }
                 });
                 /*
@@ -146,11 +146,10 @@ public class MovieListFragment extends Fragment implements LoaderManager.LoaderC
                                                 int position, long id) {
                             //getting the movie details for the selected item
                             Gson gson = new Gson();
-                            Intent intent = new Intent(getActivity(), MovieDetailsActivity.class);
                             final List<Results> results = gson.fromJson(mMovieDetails, List.class);
-                            String dataToPass = gson.toJson(results.get(position));
-                            intent.putExtra(EXTRA_MESSAGE, dataToPass);
-                            startActivity(intent);
+                            String dataToPass = gson.toJson(results.get(position));;
+                            ((CallbackItemSelection) getActivity())
+                                    .onItemSelected(dataToPass);
                         }
                     });
                  }else {
@@ -184,12 +183,12 @@ public class MovieListFragment extends Fragment implements LoaderManager.LoaderC
                                 gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                                     public void onItemClick(AdapterView<?> parent, View v,
                                                             int position, long id) {
+
                                         //getting the movie details for the selected item
-                                        Intent intent = new Intent(getActivity(), MovieDetailsActivity.class);
                                         Gson gson = new Gson();
                                         String movieDetails = gson.toJson(results.get(position));
-                                        intent.putExtra(EXTRA_MESSAGE, movieDetails);
-                                        startActivity(intent);
+                                        ((CallbackItemSelection) getActivity())
+                                                .onItemSelected(movieDetails);
                                     }
                                 });
                             }
@@ -284,4 +283,18 @@ public class MovieListFragment extends Fragment implements LoaderManager.LoaderC
     public void onLoaderReset(Loader<Cursor> loader) {
         mImageCursorAdapter.swapCursor(null);
     }
+
+    /**
+     * A callback interface that all activities containing this fragment must
+     * implement. This mechanism allows activities to be notified of item
+     * selections.
+     */
+    public interface CallbackItemSelection {
+        /**
+         * DetailFragmentCallback for when an item has been selected.
+         */
+        void onItemSelected(String movieDetails);
+    }
+
+
 }

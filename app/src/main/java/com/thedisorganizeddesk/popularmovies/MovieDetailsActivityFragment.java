@@ -5,9 +5,14 @@ import android.content.Intent;
 import android.net.Uri;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v7.widget.ShareActionProvider;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -47,12 +52,43 @@ import retrofit.client.Response;
  */
 public class MovieDetailsActivityFragment extends Fragment {
     private final String LOG_TAG=this.getClass().getSimpleName();
-    private final String EXTRA_MESSAGE="MovieDetails";
     private String mMovieDetails;
     private String mMovieId;
     private String mTrailerLink;
+    private String mShareText;
+    static final String MOVIE_DETAILS = "MovieDetails";
     public MovieDetailsActivityFragment() {
     }
+
+
+    @Override
+    public void onCreate(Bundle savedInstanceState){
+        super.onCreate(savedInstanceState);
+        // Add this line in order for this fragment to handle menu events.
+        setHasOptionsMenu(true);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater menuInflater) {
+        menuInflater.inflate(R.menu.menu_movie_details_fragment, menu);
+        // Locate MenuItem with ShareActionProvider
+        super.onCreateOptionsMenu(menu, menuInflater);
+    }
+
+
+    @Override
+    public boolean onOptionsItemSelected (MenuItem item){
+        int id = item.getItemId();
+        if(id == R.id.menu_item_share){
+            Intent sendIntent = new Intent();
+            sendIntent.setAction(Intent.ACTION_SEND);
+            sendIntent.putExtra(Intent.EXTRA_TEXT, mShareText);
+            sendIntent.setType("text/plain");
+            startActivity(sendIntent);
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -72,13 +108,18 @@ public class MovieDetailsActivityFragment extends Fragment {
         });
 
         //get the JSON String from the Intent
-        Intent intent = getActivity().getIntent();
-        mMovieDetails= intent.getStringExtra(EXTRA_MESSAGE);
-
+        Bundle arguments = getArguments();
+        if (arguments != null) {
+            mMovieDetails = arguments.getString(MOVIE_DETAILS);
+        }
+        else{
+            //if no movie details is found, return the empty view
+            return null;
+        }
         //Parse the JSON String to a JSONObject
         //TODO: alternatively use gson to convert the JSON string to a Movies object and fetch properties from there
         try{
-            JSONObject movie_detail= new JSONObject(mMovieDetails);
+            final JSONObject movie_detail= new JSONObject(mMovieDetails);
             mMovieId=movie_detail.getString("id");
             TextView title=(TextView) view.findViewById(R.id.movie_title);
             title.setText(movie_detail.getString("original_title"));
@@ -119,6 +160,12 @@ public class MovieDetailsActivityFragment extends Fragment {
                     for(MovieTrailer movieTrailer:trailers){
                         if(movieTrailer.getSite().compareTo("YouTube")==0){
                             mTrailerLink=movieTrailer.getKey();
+                            //build the share text
+                            try {
+                                mShareText = "Check out the " + movie_detail.getString("original_title") + "  trailer at: https://www.youtube.com/watch?v=" + mTrailerLink+" #PopularMoviesApp";
+                            }catch (Exception e){
+
+                            }
                             break;
                         }
                     }
