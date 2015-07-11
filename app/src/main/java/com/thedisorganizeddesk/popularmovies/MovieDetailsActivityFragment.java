@@ -137,7 +137,7 @@ public class MovieDetailsActivityFragment extends Fragment {
             String relativePath=movie_detail.getString("backdrop_path");
             //set the image for backdrop
             //TODO: Handle Picasso Exception
-            Picasso.with(getActivity()).load(basepath + relativePath).into(backdrop);
+            Picasso.with(getActivity()).load(basepath + relativePath).fit().centerCrop().into(backdrop);
 
             //get the imageView for backdrop
             ImageView poster= (ImageView) view.findViewById(R.id.movie_poster);
